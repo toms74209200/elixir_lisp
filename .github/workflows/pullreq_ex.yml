@@ -19,6 +19,7 @@ jobs:
           elixir-version: 1.15.6
       - name: Install dependencies
         run: |
+          mix local.hex --force
           mix deps.get
           mix deps.compile
       - name: Check format
