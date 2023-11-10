@@ -13,11 +13,9 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: elixir:1.15-slim
+      options: --user root
     steps:
       - uses: actions/checkout@v4
-      - name: set user
-        run: |
-          sudo chown -R root:root $GITHUB_WORKSPACE
       - name: Install dependencies
         run: |
           mix local.hex --force
