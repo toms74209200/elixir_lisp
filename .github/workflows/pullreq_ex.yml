@@ -24,6 +24,8 @@ jobs:
           mix deps.compile
       - name: Check format
         run: mix format --check-formatted
+      - name: Check type format
+        run: mix dialyzer
       - uses: red-shirts/reviewdog-action-credo@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
