@@ -1,0 +1,45 @@
+name: On Pull Request(Elixir)
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '*.ex'
+      - '*.exs'
+
+jobs:
+  linter:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: 25
+          elixir-version: 1.15.6
+      - name: Install dependencies
+        run: |
+          mix deps.get
+          mix deps.compile
+      - name: Check format
+        run: mix format --check-formatted
+      - uses: red-shirts/reviewdog-action-credo@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+  unit-test:
+    runs-on: ubuntu-22.04
+    needs:
+      - linter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: 25
+          elixir-version: 1.15.6
+      - name: Install dependencies
+        run: |
+          mix deps.get
+          mix deps.compile
+      - name: Run tests
+        run: mix test
