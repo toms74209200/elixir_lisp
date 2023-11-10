@@ -11,12 +11,10 @@ on:
 jobs:
   linter:
     runs-on: ubuntu-22.04
+    container:
+      image: elixir:1.15-slim
     steps:
       - uses: actions/checkout@v4
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: 25
-          elixir-version: 1.15.6
       - name: Install dependencies
         run: |
           mix local.hex --force
