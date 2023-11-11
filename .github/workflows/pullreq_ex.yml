@@ -21,9 +21,9 @@ jobs:
         run: |
           mix deps.get
           mix deps.compile
-        name: Check format
+      - name: Check format
         run: mix format --check-formatted
-        name: Check type format
+      - name: Check type format
         run: mix dialyzer
       - uses: reviewdog/action-setup@v1
         with:
