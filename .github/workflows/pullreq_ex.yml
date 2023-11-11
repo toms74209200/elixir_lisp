@@ -40,7 +40,7 @@ jobs:
         if: steps.plt-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ${{ env.PLT_CACHE_PATH }}
-          make ${{ env.PLT_CACHE_PATH }}
+          make ${{ env.PLT_CACHE_PATH }}/dialyzer.plt
       - name: Check type format
         run: make dialyzer
       - uses: reviewdog/action-setup@v1
