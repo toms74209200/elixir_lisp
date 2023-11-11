@@ -17,14 +17,32 @@ jobs:
         with:
           otp-version: 25
           elixir-version: 1.15.6
+      - name: Retrieve Mix Dependencies Cache
+        uses: actions/cache@v1
+        id: mix-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - name: Install dependencies
+        if: steps.mix-cache.outputs.cache-hit != 'true'
         run: |
           mix deps.get
           mix deps.compile
       - name: Check format
         run: mix format --check-formatted
+      - name: Retrieve PLT Cache
+        uses: actions/cache@v1
+        id: plt-cache
+        with:
+          path: priv/plts
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-plts-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+      - name: Create PLTs
+        if: steps.plt-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p priv/plts
+          mix dialyzer --plt
       - name: Check type format
-        run: mix dialyzer
+        run: mix dialyzer --no-check --halt-exit-status
       - uses: reviewdog/action-setup@v1
         with:
           reviewdog_version: latest
