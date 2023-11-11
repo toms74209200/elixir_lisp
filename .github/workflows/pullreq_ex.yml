@@ -11,6 +11,8 @@ on:
 jobs:
   linter:
     runs-on: ubuntu-22.04
+    env:
+      PLT_CACHE_PATH: priv/plts
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
@@ -18,31 +20,29 @@ jobs:
           otp-version: 25
           elixir-version: 1.15.6
       - name: Retrieve Mix Dependencies Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         id: mix-cache
         with:
           path: deps
-          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - name: Install dependencies
         if: steps.mix-cache.outputs.cache-hit != 'true'
-        run: |
-          mix deps.get
-          mix deps.compile
+        run: make setup
       - name: Check format
-        run: mix format --check-formatted
+        run: make format
       - name: Retrieve PLT Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         id: plt-cache
         with:
-          path: priv/plts
-          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-plts-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          path: ${{ env.PLT_CACHE_PATH }}
+          key: ${{ runner.os }}-plts-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - name: Create PLTs
         if: steps.plt-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p priv/plts
-          mix dialyzer --plt
+          mkdir -p ${{ env.PLT_CACHE_PATH }}
+          make ${{ env.PLT_CACHE_PATH }}
       - name: Check type format
-        run: mix dialyzer --no-check --halt-exit-status
+        run: make dialyzer
       - uses: reviewdog/action-setup@v1
         with:
           reviewdog_version: latest
@@ -62,9 +62,14 @@ jobs:
         with:
           otp-version: 25
           elixir-version: 1.15.6
+      - name: Retrieve Mix Dependencies Cache
+        uses: actions/cache@v3
+        id: mix-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - name: Install dependencies
-        run: |
-          mix deps.get
-          mix deps.compile
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: make setup
       - name: Run tests
-        run: mix test
+        run: make test

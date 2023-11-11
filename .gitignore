@@ -24,3 +24,6 @@ elixir_lisp-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# dialyxir PLT cache files
+priv/plts/
