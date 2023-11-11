@@ -1,6 +1,7 @@
 DIALYXIR_DIR =			deps/dialyxir
 CREDO_DIR =				deps/credo
 DIALYXIR_CACHE_DIR =	priv/plts
+DIALYXIR_CACHE =		$(DIALYXIR_CACHE_DIR)/dialyzer.plt
 
 .PHONY: help
 
@@ -28,10 +29,10 @@ $(DIALYXIR_DIR):
 	mix deps.get
 	mix deps.compile
 
-$(DIALYXIR_CACHE_DIR):
+$(DIALYXIR_CACHE):
 	mix dialyzer --plt
 
-dialyzer: $(DIALYXIR_DIR) $(DIALYXIR_CACHE_DIR) ## run dialyzer
+dialyzer: $(DIALYXIR_DIR) $(DIALYXIR_CACHE) ## run dialyzer
 	mix dialyzer --no-check
 
 format: ## run formatter
