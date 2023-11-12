@@ -15,7 +15,7 @@ defmodule Parser do
   {:ok, ["+", "1", "2"]}
 
   iex> Parser.parse("(* (+ 1 2) 3))")
-  {:ok, [["+", "1", "2"], "*", "3"]}
+  {:ok, ["*", ["+", "1", "2"], "3"]}
 
   iex> Parser.parse(1)
   {:error, "Input argument must be a string."}
@@ -52,7 +52,7 @@ defmodule Parser do
     do: read_parentheses(rest, :start, {[stack, content], [], []})
 
   defp read_parentheses(")" <> rest, :start, {stack, content, [head | tail]}),
-    do: read_parentheses(rest, :start, {[stack, content], [head], tail})
+    do: read_parentheses(rest, :start, {[stack, head, content], [], tail})
 
   defp read_parentheses(
          <<head::binary-size(1), rest::binary>>,
@@ -77,13 +77,13 @@ defmodule Parser do
     do: read_parentheses(rest, :start, {content, [], []})
 
   defp read_parentheses(")" <> rest, :open, {[], content, [head | tail]}),
-    do: read_parentheses(rest, :start, {[content], [head], tail})
+    do: read_parentheses(rest, :start, {[head, content], [], tail})
 
   defp read_parentheses(")" <> rest, :open, {stack, content, []}),
     do: read_parentheses(rest, :start, {stack ++ content, [], []})
 
   defp read_parentheses(")" <> rest, :open, {stack, content, [head | tail]}),
-    do: read_parentheses(rest, :start, {[stack, content], [head], tail})
+    do: read_parentheses(rest, :start, {[stack, head, content], [], tail})
 
   defp read_parentheses("(" <> rest, :open, {stack, content, []}),
     do: read_parentheses(rest, :open, {stack, [], content})
