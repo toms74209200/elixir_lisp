@@ -51,7 +51,7 @@ jobs:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_LEVEL: warning
         run: |
-          mix credo suggest --strict --format=flycheck | reviewdog -efm="%f:%l:%c: %t: %m" -efm="%f:%l: %t: %m" -name="credo" -level="${INPUT_LEVEL}" -filter-mode=nofilter
+          mix credo suggest --strict --format=flycheck | reviewdog -efm="%f:%l:%c: %t: %m" -efm="%f:%l: %t: %m" -name="credo" -level=${{ env.INPUT_LEVEL }} -filter-mode=nofilter
   unit-test:
     runs-on: ubuntu-22.04
     needs:
