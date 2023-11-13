@@ -26,14 +26,36 @@ defmodule Parser do
   end
 
   def parse(input) when is_bitstring(input) do
-    read_parentheses(input, :start, {[], [], []})
+    result = read_parentheses(input, :start, {[], [], []})
+
+    if result == :error do
+      {:error, "Unbalanced parentheses"}
+    else
+      {:ok, result}
+    end
   end
 
   def parse(_) do
     {:error, "Input argument must be a string."}
   end
 
-  defp read_parentheses("", :start, {stack, [], []}), do: {:ok, stack}
+  @doc """
+  Tokenize input string list and return a list of tokens.
+
+  Examples:
+  iex> Parser.tokenize({:ok, ["+", "1", "2"]})
+  {:ok, [:+, 1.0, 2.0]}
+
+  iex> Parser.tokenize({:ok, ["*", ["+", "1", "2"], "3"]})
+  {:ok, [:*, [:+, 1.0, 2.0], 3.0]}
+  """
+  def tokenize({:ok, inputs}) do
+    {:ok, _tokenize(inputs)}
+  end
+
+  def tokenize({:error, message}), do: {:error, message}
+
+  defp read_parentheses("", :start, {stack, [], []}), do: stack
 
   defp read_parentheses("(" <> rest, :start, {stack, [], []}) do
     [head, tail] = String.split(rest, " ", parts: 2, trim: true)
@@ -70,8 +92,7 @@ defmodule Parser do
     end
   end
 
-  defp read_parentheses("", :open, {stack, [], []}),
-    do: {:ok, stack}
+  defp read_parentheses("", :open, {stack, [], []}), do: stack
 
   defp read_parentheses(")" <> rest, :open, {[], content, []}),
     do: read_parentheses(rest, :start, {content, [], []})
@@ -120,6 +141,19 @@ defmodule Parser do
       "Error stack: #{inspect(stack)}, content: #{inspect(content)}, evacuation: #{inspect(evacuation)}"
     )
 
-    {:error, "Unbalanced parentheses"}
+    :error
+  end
+
+  defp _tokenize(inputs) do
+    Enum.map(inputs, fn input ->
+      if is_list(input) do
+        _tokenize(input)
+      else
+        case Float.parse(input) do
+          {float, _} -> float
+          :error -> String.to_atom(input)
+        end
+      end
+    end)
   end
 end
