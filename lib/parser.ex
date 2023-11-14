@@ -49,6 +49,8 @@ defmodule Parser do
   iex> Parser.tokenize({:ok, ["*", ["+", "1", "2"], "3"]})
   {:ok, [:*, [:+, 1.0, 2.0], 3.0]}
   """
+  @spec tokenize({:ok, list(any())} | {:error, String.t()}) ::
+          {:ok, list(any())} | {:error, String.t()}
   def tokenize({:ok, inputs}) do
     {:ok, _tokenize(inputs)}
   end
