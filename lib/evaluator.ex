@@ -11,6 +11,12 @@ defmodule Evaluator do
   iex> Evaluator.eval([:+, 1, 2, 3], 0)
   6
 
+  iex> Evaluator.eval([:-, 3, 1], 0)
+  2
+
+  iex> Evaluator.eval([:-, 3, 2, 1], 0)
+  0
+
   iex> Evaluator.eval([:*, [:+, 1, 2], 3], 0)
   9
   """
@@ -18,6 +24,7 @@ defmodule Evaluator do
   def eval([atom | args], acc) do
     case atom do
       :+ -> add(args, acc)
+      :- -> minus(args, acc)
       :* -> multiply(args, acc)
     end
   end
@@ -31,6 +38,20 @@ defmodule Evaluator do
           arg + acc
         end
       end)
+  end
+
+  defp minus(args, acc) do
+    [minuend | subtrahends] = args
+
+    minuend -
+      (acc +
+         Enum.reduce(subtrahends, acc, fn subtrahend, acc ->
+           if is_list(subtrahend) do
+             acc + eval(subtrahend, acc)
+           else
+             acc + subtrahend
+           end
+         end))
   end
 
   defp multiply(args, acc) do
