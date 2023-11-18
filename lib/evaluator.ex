@@ -6,22 +6,28 @@ defmodule Evaluator do
   @doc """
   Examples:
   iex> Evaluator.eval([:+, 1, 2], 0)
-  3
+  {:ok, 3}
 
   iex> Evaluator.eval([:+, 1, 2, 3], 0)
-  6
+  {:ok, 6}
 
   iex> Evaluator.eval([:-, 3, 1], 0)
-  2
+  {:ok, 2}
 
   iex> Evaluator.eval([:-, 3, 2, 1], 0)
-  0
+  {:ok, 0}
 
   iex> Evaluator.eval([:*, [:+, 1, 2], 3], 0)
-  9
+  {:ok, 9}
   """
-  @spec eval(list(atom() | list(any())), number()) :: number()
-  def eval([atom | args], acc) do
+  @spec eval(list(atom() | list(any())), number()) :: {atom(), number()}
+  def eval(args, acc) do
+    result = _eval(args, acc)
+
+    {:ok, result}
+  end
+
+  defp _eval([atom | args], acc) do
     case atom do
       :+ -> add(args, acc)
       :- -> minus(args, acc)
@@ -33,7 +39,7 @@ defmodule Evaluator do
     acc +
       Enum.reduce(args, acc, fn arg, acc ->
         if is_list(arg) do
-          eval(arg, acc) + acc
+          _eval(arg, acc) + acc
         else
           arg + acc
         end
@@ -47,7 +53,7 @@ defmodule Evaluator do
       (acc +
          Enum.reduce(subtrahends, acc, fn subtrahend, acc ->
            if is_list(subtrahend) do
-             acc + eval(subtrahend, acc)
+             acc + _eval(subtrahend, acc)
            else
              acc + subtrahend
            end
@@ -57,7 +63,7 @@ defmodule Evaluator do
   defp multiply(args, acc) do
     Enum.reduce(args, acc, fn arg, acc ->
       if is_list(arg) do
-        eval(arg, acc)
+        _eval(arg, acc)
       else
         arg * acc
       end
