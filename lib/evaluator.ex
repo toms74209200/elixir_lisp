@@ -22,19 +22,35 @@ defmodule Evaluator do
 
   iex> Evaluator.eval([:*, [:+, 1, 2], 3], 0)
   {:ok, 9}
-  """
-  @spec eval(list(atom() | list(any())), number()) :: {atom(), number()}
-  def eval(args, acc) do
-    result = _eval(args, acc)
 
-    {:ok, result}
+  iex> Evaluator.eval([:/, 6, 2], 0)
+  {:ok, 3.0}
+
+  iex> Evaluator.eval([:/, 1, 0], 0)
+  {:error, "Division by zero"}
+  """
+  @spec eval(list(atom() | list(any())), number()) :: {atom(), number() | String.t()}
+  def eval(args, acc) do
+    _eval(args, acc)
   end
 
   defp _eval([atom | args], acc) do
     case atom do
-      :+ -> add(args, acc)
-      :- -> minus(args, acc)
-      :* -> multiply(args, acc)
+      :+ ->
+        {:ok, add(args, acc)}
+
+      :- ->
+        {:ok, minus(args, acc)}
+
+      :* ->
+        {:ok, multiply(args, acc)}
+
+      :/ ->
+        if divide_by_zero?(args) do
+          {:error, "Division by zero"}
+        else
+          {:ok, divide(args, acc)}
+        end
     end
   end
 
@@ -42,7 +58,13 @@ defmodule Evaluator do
     acc +
       Enum.reduce(args, acc, fn arg, acc ->
         if is_list(arg) do
-          _eval(arg, acc) + acc
+          case _eval(arg, acc) do
+            {:ok, result} ->
+              result + acc
+
+            error ->
+              error
+          end
         else
           arg + acc
         end
@@ -54,7 +76,13 @@ defmodule Evaluator do
       (acc +
          Enum.reduce(subtrahends, acc, fn subtrahend, acc ->
            if is_list(subtrahend) do
-             acc + _eval(subtrahend, acc)
+             case _eval(subtrahend, acc) do
+               {:ok, result} ->
+                 acc + result
+
+               error ->
+                 error
+             end
            else
              acc + subtrahend
            end
@@ -64,7 +92,13 @@ defmodule Evaluator do
   defp multiply(args, 0) do
     Enum.reduce(args, 1, fn arg, acc ->
       if is_list(arg) do
-        _eval(arg, 0)
+        case _eval(arg, 0) do
+          {:ok, result} ->
+            result * acc
+
+          error ->
+            error
+        end
       else
         arg * acc
       end
@@ -74,10 +108,48 @@ defmodule Evaluator do
   defp multiply(args, acc) do
     Enum.reduce(args, acc, fn arg, acc ->
       if is_list(arg) do
+        case _eval(arg, acc) do
+          {:ok, result} -> result
+          error -> error
+        end
+
         _eval(arg, acc)
       else
         arg * acc
       end
     end)
+  end
+
+  defp divide([dividend | divisors], 0) do
+    dividend /
+      Enum.reduce(divisors, 1, fn divisor, acc ->
+        if is_list(divisor) do
+          case _eval(divisor, 0) do
+            {:ok, result} -> result
+            error -> error
+          end
+        else
+          acc * divisor
+        end
+      end)
+  end
+
+  defp divide([dividend | divisors], acc) do
+    dividend /
+      (acc *
+         Enum.reduce(divisors, acc, fn divisor, acc ->
+           if is_list(divisor) do
+             case _eval(divisor, acc) do
+               {:ok, result} -> result * acc
+               error -> error
+             end
+           else
+             acc * divisor
+           end
+         end))
+  end
+
+  defp divide_by_zero?([_ | divisors]) do
+    Enum.member?(divisors, 0)
   end
 end
